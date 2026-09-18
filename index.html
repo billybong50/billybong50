@@ -1,11 +1,37 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open in About:Blank</title>
+    <title>Blob URL Generator</title>
+
+    <!-- Anti-Framing / Frame-Busting Protection -->
+    <style id="antiClickjack">
+        /* Hide page initially if loaded inside a frame */
+        body { display: none !important; }
+    </style>
+    <script>
+        // Check if the current window is inside an iframe
+        if (window.top === window.self) {
+            // Not in an iframe: show the page
+            document.documentElement.style.display = 'block';
+            document.addEventListener('DOMContentLoaded', () => {
+                const antiClickjack = document.getElementById('antiClickjack');
+                if (antiClickjack) antiClickjack.parentNode.removeChild(antiClickjack);
+            });
+        } else {
+            // Inside an iframe: break out of the frame
+            window.top.location = window.self.location;
+        }
+    </script>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -13,62 +39,102 @@
             height: 100vh;
             background: #1a1a2e;
             font-family: Arial, sans-serif;
+            color: #ffffff;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: #16213e;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        input[type="url"] {
+            width: 320px;
+            padding: 14px 18px;
+            font-size: 16px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="url"]:focus {
+            border-color: #e94560;
         }
         button {
-            padding: 25px 50px;
-            font-size: 20px;
+            padding: 16px 36px;
+            font-size: 16px;
             font-weight: bold;
             background: linear-gradient(135deg, #e94560, #ff6b6b);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
         }
         button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(233, 69, 96, 0.5);
         }
     </style>
 </head>
 <body>
-    <button onclick="openInBlank()">Click Here</button>
+
+    <div class="container">
+        <h2>Open Link in Blob URL</h2>
+        <input type="url" id="urlInput" placeholder="https://example.com" value="https://billybong50.github.io/realhome">
+        <button onclick="openInBlob()">Open Blob</button>
+    </div>
 
     <script>
-        function openInBlank() {
-            const targetUrl = 'https://billybong50.github.io/realhome';
-            
-            const content = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Home</title>
-                <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
-                <style>
-                    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; }
-                    iframe { border: none; width: 100%; height: 100%; }
-                </style>
-            </head>
-            <body>
-                <iframe src="${targetUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock"></iframe>
-                <script>
-                    window.addEventListener('keydown', function(e) {
-                        if (e.key.toLowerCase() === 'q') {
-                            window.location.replace('https://classroom.google.com');
-                        }
-                    });
-                <\/script>
-            </body>
-            </html>`;
+        function openInBlob() {
+            let targetUrl = document.getElementById('urlInput').value.trim();
 
-            const newWin = window.open('about:blank', '_blank');
-            if (newWin) {
-                newWin.document.open();
-                newWin.document.write(content);
-                newWin.document.close();
-            } else {
+            if (!targetUrl) {
+                alert('Please enter a valid URL.');
+                return;
+            }
+
+            // Ensure the URL contains a protocol
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                targetUrl = 'https://' + targetUrl;
+            }
+
+            const pageContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Viewer</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; }
+        iframe { border: none; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <iframe src="${targetUrl}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads allow-pointer-lock"></iframe>
+    <script>
+        window.addEventListener('keydown', function(e) {
+            if (e.key.toLowerCase() === 'q') {
+                window.location.replace('https://classroom.google.com');
+            }
+        });
+    <\/script>
+</body>
+</html>`;
+
+            // Create a Blob containing the HTML
+            const blob = new Blob([pageContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Open the Blob URL in a new window/tab
+            const newWin = window.open(blobUrl, '_blank');
+            if (!newWin) {
                 alert('Popup blocked! Please allow popups for this site.');
             }
         }
