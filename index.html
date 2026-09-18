@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blob URL Generator</title>
+    <title>Launch Options</title>
 
     <!-- Anti-Framing / Frame-Busting Protection -->
     <style id="antiClickjack">
-        /* Hide page initially if loaded inside a frame */
+        /* Hide page if loaded inside an iframe */
         body { display: none !important; }
     </style>
     <script>
@@ -21,7 +21,7 @@
                 if (antiClickjack) antiClickjack.parentNode.removeChild(antiClickjack);
             });
         } else {
-            // Inside an iframe: break out of the frame
+            // Inside an iframe: break out
             window.top.location = window.self.location;
         }
     </script>
@@ -51,25 +51,16 @@
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        input[type="url"] {
-            width: 320px;
-            padding: 14px 18px;
-            font-size: 16px;
-            border: 2px solid #0f3460;
-            border-radius: 8px;
-            background: #0f3460;
-            color: #fff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input[type="url"]:focus {
-            border-color: #e94560;
+        .button-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         button {
-            padding: 16px 36px;
+            padding: 18px 32px;
             font-size: 16px;
             font-weight: bold;
-            background: linear-gradient(135deg, #e94560, #ff6b6b);
             color: white;
             border: none;
             border-radius: 10px;
@@ -78,38 +69,39 @@
             text-transform: uppercase;
             letter-spacing: 1.5px;
         }
+        .btn-blank {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+        }
+        .btn-blob {
+            background: linear-gradient(135deg, #0f3460, #533483);
+        }
         button:hover {
-            transform: scale(1.03);
+            transform: scale(1.05);
             box-shadow: 0 0 25px rgba(233, 69, 96, 0.5);
+        }
+        .btn-blob:hover {
+            box-shadow: 0 0 25px rgba(83, 52, 131, 0.6);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Open Link in Blob URL</h2>
-        <input type="url" id="urlInput" placeholder="https://example.com" value="https://billybong50.github.io/realhome">
-        <button onclick="openInBlob()">Open Blob</button>
+        <h2>Choose Launch Method</h2>
+        <div class="button-group">
+            <button class="btn-blank" onclick="openInBlank()">Open in About:Blank</button>
+            <button class="btn-blob" onclick="openInBlob()">Open in Blob</button>
+        </div>
     </div>
 
     <script>
-        function openInBlob() {
-            let targetUrl = document.getElementById('urlInput').value.trim();
+        const targetUrl = 'https://billybong50.github.io/realhome';
 
-            if (!targetUrl) {
-                alert('Please enter a valid URL.');
-                return;
-            }
-
-            // Ensure the URL contains a protocol
-            if (!/^https?:\/\//i.test(targetUrl)) {
-                targetUrl = 'https://' + targetUrl;
-            }
-
-            const pageContent = `<!DOCTYPE html>
+        function getPageContent() {
+            return `<!DOCTYPE html>
 <html>
 <head>
-    <title>Viewer</title>
+    <title>Home</title>
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; }
@@ -127,12 +119,24 @@
     <\/script>
 </body>
 </html>`;
+        }
 
-            // Create a Blob containing the HTML
-            const blob = new Blob([pageContent], { type: 'text/html' });
+        // 1. Open in about:blank
+        function openInBlank() {
+            const newWin = window.open('about:blank', '_blank');
+            if (newWin) {
+                newWin.document.open();
+                newWin.document.write(getPageContent());
+                newWin.document.close();
+            } else {
+                alert('Popup blocked! Please allow popups for this site.');
+            }
+        }
+
+        // 2. Open as a Blob URL
+        function openInBlob() {
+            const blob = new Blob([getPageContent()], { type: 'text/html' });
             const blobUrl = URL.createObjectURL(blob);
-
-            // Open the Blob URL in a new window/tab
             const newWin = window.open(blobUrl, '_blank');
             if (!newWin) {
                 alert('Popup blocked! Please allow popups for this site.');
